@@ -6,16 +6,26 @@ import {createStackNavigator} from '@react-navigation/stack';
 import TaskListScreen from './src/screens/TaskListScreen';
 import AddTaskScreen from './src/screens/AddTaskScreen';
 import TaskDetailsScreen from './src/screens/TaskDetailsScreen';
-import { StatusBar } from 'react-native';
+import {StatusBar} from 'react-native';
 
 const Stack = createStackNavigator();
 
 const App = () => {
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={'dark-content'}/>
+      <StatusBar barStyle={'light-content'} />
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="TaskList">
+        <Stack.Navigator
+          initialRouteName="TaskList"
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#3498db', // Change this to your desired color
+            },
+            headerTintColor: '#fff', // Text color for the header
+            headerTitleStyle: {
+              // fontWeight: 'bold',
+            },
+          }}>
           <Stack.Screen
             name="TaskList"
             component={TaskListScreen}
