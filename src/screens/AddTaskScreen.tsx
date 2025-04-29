@@ -20,6 +20,7 @@ const AddTaskScreen = ({navigation}: any) => {
   const saveTask = async () => {
     if (!title.trim()) {
       Alert.alert('Error', 'Task title is required');
+      return;
     }
 
     try {

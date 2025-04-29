@@ -88,7 +88,9 @@ const TaskListScreen = ({navigation}: any) => {
             style={[styles.taskTitle, item.completed && styles.taskCompleted]}>
             {item.title}
           </Text>
-          <Text style={styles.taskDescription}>{item.description}</Text>
+          {item.description ? (
+            <Text style={styles.taskDescription}>{item.description}</Text>
+          ) : null}
         </View>
       </TouchableOpacity>
     );

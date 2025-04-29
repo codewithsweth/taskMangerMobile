@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const TaskDetailsScreen = ({route, navigation}) => {
   const {task} = route.params;
 
-  const formatDate = dateString => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return 'No date set';
 
     try {
@@ -104,10 +104,12 @@ const TaskDetailsScreen = ({route, navigation}) => {
           </View>
         </View>
         {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Description</Text>
-          <Text style={styles.description}>{task.description}</Text>
-        </View>
+        {task.description ? (
+          <View style={styles.section}>
+            <Text style={styles.label}>Description</Text>
+            <Text style={styles.description}>{task.description}</Text>
+          </View>
+        ) : null}
         {/* Task Info */}
         <View style={styles.infoContainer}>
           <View style={styles.infoItem}>
@@ -120,10 +122,12 @@ const TaskDetailsScreen = ({route, navigation}) => {
               {task.completed ? 'Completed' : 'Pending'}
             </Text>
           </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Due Date</Text>
-            <Text style={styles.infoValue}>{task.dueDate}</Text>
-          </View>
+          {task.dueDate ? (
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Due Date</Text>
+              <Text style={styles.infoValue}>{task.dueDate}</Text>
+            </View>
+          ) : null}
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Created</Text>
             <Text style={styles.infoValue}>{formatDate(task.createAt)}</Text>
