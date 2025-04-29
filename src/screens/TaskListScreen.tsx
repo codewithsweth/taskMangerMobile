@@ -8,8 +8,21 @@ const TaskListScreen = ({navigation}: any) => {
         <TouchableOpacity
           style={styles.taskItem}
           onPress={() => navigation.navigate('TaskDetails')}>
-          <TouchableOpacity style={[styles.checkbox, false && styles.checkedBox]} />
-          <Text>Item</Text>
+          <TouchableOpacity
+            style={[styles.checkbox, false && styles.checkedBox]}
+          />
+          <View style={styles.taskContent}>
+            <Text style={[styles.taskTitle, false && styles.taskCompleted]}>
+              Statement of Purpose
+            </Text>
+            <Text style={styles.taskDescription}>
+              I’m a B.Tech graduate in Information Technology (first class) with
+              1 year and 5 months of experience as a Software Engineer at Cloud
+              First Computing. During this time, I worked on two major web
+              development projects, which strengthened my skills in frontend
+              development skills react, javascript, git, nodejs & redux.
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
       <TouchableOpacity
@@ -52,6 +65,22 @@ const styles = StyleSheet.create({
   },
   checkedBox: {
     backgroundColor: '#3498db',
+  },
+  taskContent: {
+    flex: 1,
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: 600,
+    marginBottom: 4,
+  },
+  taskCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#7f8c8d',
+  },
+  taskDescription: {
+    fontSize: 14,
+    color: '#7f8c8d',
   },
   addButton: {
     position: 'absolute',
