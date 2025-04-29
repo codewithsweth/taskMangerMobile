@@ -16,6 +16,7 @@ interface TaskProps {
   title: string;
   description: string;
   completed: boolean;
+  priority: string;
 }
 
 const TaskListScreen = ({navigation}: any) => {
@@ -73,6 +74,20 @@ const TaskListScreen = ({navigation}: any) => {
     }, []),
   );
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'low':
+        return '#2ecc71';
+      case 'medium':
+        return '#f39c12';
+      case 'high':
+        return '#e74c3c';
+
+      default:
+        return '#f39c12';
+    }
+  };
+
   const renderTask = ({item}: ListRenderItemInfo<TaskProps>) => {
     return (
       <TouchableOpacity
@@ -92,16 +107,22 @@ const TaskListScreen = ({navigation}: any) => {
             <Text style={styles.taskDescription}>{item.description}</Text>
           ) : null}
         </View>
+        <View
+          style={[
+            styles.priorityIndicator,
+            {borderRightColor: getPriorityColor(item.priority)},
+          ]}
+        />
       </TouchableOpacity>
     );
   };
   return (
     <View style={styles.container}>
       {loading ? (
-        <Text style={styles.LoadingText}>Loading Tasks...</Text>
+        <Text style={styles.LoadingText}>Loading tasks...</Text>
       ) : tasks.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No Tasks</Text>
+          <Text style={styles.emptyText}>No tasks yet</Text>
           <Text style={styles.emptySubText}>
             Tap the + button to add a new task
           </Text>
@@ -145,6 +166,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
   },
   checkbox: {
+    alignSelf: 'flex-start',
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -214,6 +236,12 @@ const styles = StyleSheet.create({
     marginTop: 24,
     fontSize: 16,
     color: '#7f8c8d',
+  },
+  priorityIndicator: {
+    borderRightWidth: 5,
+    opacity: 0.8,
+    height: '100%',
+    borderRadius: 8,
   },
 });
 
