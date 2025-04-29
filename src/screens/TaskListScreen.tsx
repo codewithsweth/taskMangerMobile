@@ -35,7 +35,7 @@ const TaskListScreen = ({navigation}: any) => {
     return (
       <TouchableOpacity
         style={styles.taskItem}
-        onPress={() => navigation.navigate('TaskDetails')}>
+        onPress={() => navigation.navigate('TaskDetails', {task: item})}>
         <TouchableOpacity
           style={[styles.checkbox, item.completed && styles.checkedBox]}
         />
