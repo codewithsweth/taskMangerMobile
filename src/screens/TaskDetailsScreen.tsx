@@ -4,11 +4,70 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import React from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TaskDetailsScreen = ({route, navigation}) => {
   const {task} = route.params;
+
+  const formatDate = dateString => {
+    if (!dateString) return 'No date set';
+
+    try {
+      if (dateString.includes('/')) return dateString;
+
+      const date = new Date(dateString);
+      return `${String(date.getMonth() + 1).padStart(2, '0')}/${String(
+        date.getDate(),
+      ).padStart(2, '0')}/${date.getFullYear()}`;
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const toggleTaskCompletion = async () => {
+    try {
+      const storedTasksJson = await AsyncStorage.getItem('tasks');
+      if (!storedTasksJson) return;
+
+      const storedTasks = JSON.parse(storedTasksJson);
+      const updatedTasks = storedTasks.map(t =>
+        t.id === task.id ? {...t, completed: !task.completed} : t,
+      );
+      await AsyncStorage.setItem('tasks', JSON.stringify(updatedTasks));
+      navigation.navigate('TaskList');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update task status');
+      console.error(error);
+    }
+  };
+
+  const deleteTask = async () => {
+    try {
+      const storedTasksJson = await AsyncStorage.getItem('tasks');
+      if (!storedTasksJson) return;
+
+      const storedTasks = JSON.parse(storedTasksJson);
+      const updatedTasks = storedTasks.filter(t => t.id !== task.id);
+
+      await AsyncStorage.setItem('tasks', JSON.stringify(updatedTasks));
+
+      Alert.alert('Success', 'Task deleted successfully');
+      navigation.navigate('TaskList');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete task');
+      console.error(error);
+    }
+  };
+
+  const confirmDelete = () => {
+    Alert.alert('Delete Task', 'Are you sure you want to delete this task?', [
+      {text: 'Cancel', style: 'cancel'},
+      {text: 'Delete', onPress: deleteTask, style: 'destructive'},
+    ]);
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -23,6 +82,11 @@ const TaskDetailsScreen = ({route, navigation}) => {
         return '#f39c12';
     }
   };
+
+  const getPriorityLabel = (priority: string) => {
+    return priority.charAt(0).toUpperCase() + priority.slice(1);
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.contentContainer}>
@@ -34,7 +98,9 @@ const TaskDetailsScreen = ({route, navigation}) => {
               styles.priorityBadge,
               {backgroundColor: getPriorityColor(task.priority)},
             ]}>
-            <Text style={styles.priorityText}>{task.priority}</Text>
+            <Text style={styles.priorityText}>
+              {getPriorityLabel(task.priority)}
+            </Text>
           </View>
         </View>
         {/* Description */}
@@ -60,7 +126,7 @@ const TaskDetailsScreen = ({route, navigation}) => {
           </View>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Created</Text>
-            <Text style={styles.infoValue}>{task.createAt}</Text>
+            <Text style={styles.infoValue}>{formatDate(task.createAt)}</Text>
           </View>
         </View>
       </ScrollView>
@@ -69,12 +135,15 @@ const TaskDetailsScreen = ({route, navigation}) => {
           style={[
             styles.actionButton,
             {backgroundColor: task.completed ? '#f39c12' : '#2ecc71'},
-          ]}>
+          ]}
+          onPress={toggleTaskCompletion}>
           <Text style={styles.actionButtonText}>
             {task.completed ? 'Mark Incomplete' : 'Mark Complete'}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={confirmDelete}>
           <Text style={styles.actionButtonText}>Delete Task</Text>
         </TouchableOpacity>
       </View>
