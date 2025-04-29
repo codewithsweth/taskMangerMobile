@@ -19,16 +19,50 @@ interface TaskProps {
 }
 
 const TaskListScreen = ({navigation}: any) => {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState<TaskProps[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const loadTasks = async () => {
     try {
+      setLoading(true);
       const storedTasks = await AsyncStorage.getItem('tasks');
       if (storedTasks) {
         setTasks(JSON.parse(storedTasks));
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to load tasks');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteTask = async (id: number) => {
+    try {
+      const newTasks = tasks.filter(task => task.id !== id);
+      setTasks(newTasks);
+      await AsyncStorage.setItem('tasks', JSON.stringify(newTasks));
+      Alert.alert('Success', 'Task deleted successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete task');
+    }
+  };
+
+  const confirmDelete = (id: number) => {
+    Alert.alert('Delete Task', 'Are you sure you want to delete this task?', [
+      {text: 'Cancel', style: 'cancel'},
+      {text: 'Delete', onPress: () => deleteTask(id), style: 'destructive'},
+    ]);
+  };
+
+  const toggleTaskCompletion = async (id: number) => {
+    try {
+      const updatedTasks = tasks.map(task =>
+        task.id === id ? {...task, completed: !task.completed} : task,
+      );
+      setTasks(updatedTasks);
+      await AsyncStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update task.');
     }
   };
 
@@ -43,9 +77,11 @@ const TaskListScreen = ({navigation}: any) => {
     return (
       <TouchableOpacity
         style={styles.taskItem}
-        onPress={() => navigation.navigate('TaskDetails', {task: item})}>
+        onPress={() => navigation.navigate('TaskDetails', {task: item})}
+        onLongPress={() => confirmDelete(item.id)}>
         <TouchableOpacity
           style={[styles.checkbox, item.completed && styles.checkedBox]}
+          onPress={() => toggleTaskCompletion(item.id)}
         />
         <View style={styles.taskContent}>
           <Text
@@ -59,12 +95,23 @@ const TaskListScreen = ({navigation}: any) => {
   };
   return (
     <View style={styles.container}>
-      <FlatList<TaskProps>
-        data={tasks}
-        renderItem={renderTask}
-        keyExtractor={item => item.id?.toString()}
-        contentContainerStyle={styles.listContent}
-      />
+      {loading ? (
+        <Text style={styles.LoadingText}>Loading Tasks...</Text>
+      ) : tasks.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No Tasks</Text>
+          <Text style={styles.emptySubText}>
+            Tap the + button to add a new task
+          </Text>
+        </View>
+      ) : (
+        <FlatList<TaskProps>
+          data={tasks}
+          renderItem={renderTask}
+          keyExtractor={item => item.id?.toString()}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => navigation.navigate('AddTask')}>
@@ -142,6 +189,29 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 28,
     fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#7f8c8d',
+    marginBottom: 8,
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: '#95a5a6',
+    textAlign: 'center',
+  },
+  LoadingText: {
+    textAlign: 'center',
+    marginTop: 24,
+    fontSize: 16,
+    color: '#7f8c8d',
   },
 });
 
