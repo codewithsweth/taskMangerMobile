@@ -6,14 +6,51 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import React, {useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AddTaskScreen = () => {
+const AddTaskScreen = ({navigation}: any) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState('medium');
+
+  const saveTask = async () => {
+    if (!title.trim()) {
+      Alert.alert('Error', 'Task title is required');
+    }
+
+    try {
+      const newTask = {
+        id: Date.now().toString(),
+        title: title.trim(),
+        description: description.trim(),
+        dueDate: dueDate.trim(),
+        priority,
+        completed: false,
+        createAt: new Date().toISOString(),
+      };
+
+      const existingTasksJson = await AsyncStorage.getItem('tasks');
+      const existingTasks = existingTasksJson
+        ? JSON.parse(existingTasksJson)
+        : [];
+
+      const updatedTasks = [...existingTasks, newTask];
+
+      // updating async storage with new tasks
+      await AsyncStorage.setItem('tasks', JSON.stringify(updatedTasks));
+
+      Alert.alert('Success', 'Tasks added successfully', [
+        {text: 'OK', onPress: () => navigation.goBack()},
+      ]);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save task');
+      console.error(error);
+    }
+  };
 
   const renderPriorityButton = (level: string, label: string) => {
     return (
@@ -82,7 +119,7 @@ const AddTaskScreen = () => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.saveButton}>
+        <TouchableOpacity style={styles.saveButton} onPress={saveTask}>
           <Text style={styles.saveButtonText}>Save Task</Text>
         </TouchableOpacity>
       </ScrollView>
