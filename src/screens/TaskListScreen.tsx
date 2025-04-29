@@ -1,30 +1,61 @@
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  ListRenderItemInfo,
+} from 'react-native';
 import React from 'react';
 
+const TASK_LIST = [
+  {
+    id: 1,
+    title: 'Task 1',
+    description: 'This is the descriptio content for task 1',
+    completed: false,
+  },
+  {
+    id: 2,
+    title: 'Task 2',
+    description: 'This is the descriptio content for task 2',
+    completed: true,
+  },
+];
+
+interface TaskProps {
+  id: number;
+  title: string;
+  description: string;
+  completed: boolean;
+}
+
 const TaskListScreen = ({navigation}: any) => {
+  const renderTask = ({item}: ListRenderItemInfo<TaskProps>) => {
+    return (
+      <TouchableOpacity
+        style={styles.taskItem}
+        onPress={() => navigation.navigate('TaskDetails')}>
+        <TouchableOpacity
+          style={[styles.checkbox, item.completed && styles.checkedBox]}
+        />
+        <View style={styles.taskContent}>
+          <Text style={[styles.taskTitle, item.completed && styles.taskCompleted]}>
+            {item.title}
+          </Text>
+          <Text style={styles.taskDescription}>{item.description}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
   return (
     <View style={styles.container}>
-      <View style={styles.listContent}>
-        <TouchableOpacity
-          style={styles.taskItem}
-          onPress={() => navigation.navigate('TaskDetails')}>
-          <TouchableOpacity
-            style={[styles.checkbox, false && styles.checkedBox]}
-          />
-          <View style={styles.taskContent}>
-            <Text style={[styles.taskTitle, false && styles.taskCompleted]}>
-              Statement of Purpose
-            </Text>
-            <Text style={styles.taskDescription}>
-              I’m a B.Tech graduate in Information Technology (first class) with
-              1 year and 5 months of experience as a Software Engineer at Cloud
-              First Computing. During this time, I worked on two major web
-              development projects, which strengthened my skills in frontend
-              development skills react, javascript, git, nodejs & redux.
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+      <FlatList<TaskProps>
+        data={TASK_LIST}
+        renderItem={renderTask}
+        keyExtractor={item => item.id?.toString()}
+        contentContainerStyle={styles.listContent}
+      />
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => navigation.navigate('AddTask')}>
