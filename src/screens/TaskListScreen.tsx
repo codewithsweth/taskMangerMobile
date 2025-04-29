@@ -5,23 +5,11 @@ import {
   StyleSheet,
   FlatList,
   ListRenderItemInfo,
+  Alert,
 } from 'react-native';
-import React from 'react';
-
-const TASK_LIST = [
-  {
-    id: 1,
-    title: 'Task 1',
-    description: 'This is the descriptio content for task 1',
-    completed: false,
-  },
-  {
-    id: 2,
-    title: 'Task 2',
-    description: 'This is the descriptio content for task 2',
-    completed: true,
-  },
-];
+import React, {useState} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface TaskProps {
   id: number;
@@ -31,6 +19,26 @@ interface TaskProps {
 }
 
 const TaskListScreen = ({navigation}: any) => {
+  const [tasks, setTasks] = useState([]);
+
+  const loadTasks = async () => {
+    try {
+      const storedTasks = await AsyncStorage.getItem('tasks');
+      if (storedTasks) {
+        setTasks(JSON.parse(storedTasks));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load tasks');
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadTasks();
+      return () => {};
+    }, []),
+  );
+
   const renderTask = ({item}: ListRenderItemInfo<TaskProps>) => {
     return (
       <TouchableOpacity
@@ -40,7 +48,8 @@ const TaskListScreen = ({navigation}: any) => {
           style={[styles.checkbox, item.completed && styles.checkedBox]}
         />
         <View style={styles.taskContent}>
-          <Text style={[styles.taskTitle, item.completed && styles.taskCompleted]}>
+          <Text
+            style={[styles.taskTitle, item.completed && styles.taskCompleted]}>
             {item.title}
           </Text>
           <Text style={styles.taskDescription}>{item.description}</Text>
@@ -51,7 +60,7 @@ const TaskListScreen = ({navigation}: any) => {
   return (
     <View style={styles.container}>
       <FlatList<TaskProps>
-        data={TASK_LIST}
+        data={tasks}
         renderItem={renderTask}
         keyExtractor={item => item.id?.toString()}
         contentContainerStyle={styles.listContent}
