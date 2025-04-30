@@ -9,15 +9,16 @@ import {
   Alert,
 } from 'react-native';
 import React, {useState} from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useTaskStore from '../store/taskStore';
 
 const AddTaskScreen = ({navigation}: any) => {
+  const {addTask} = useTaskStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState('medium');
 
-  const saveTask = async () => {
+  const handleSaveTask = async () => {
     if (!title.trim()) {
       Alert.alert('Error', 'Task title is required');
       return;
@@ -25,28 +26,20 @@ const AddTaskScreen = ({navigation}: any) => {
 
     try {
       const newTask = {
-        id: Date.now().toString(),
         title: title.trim(),
         description: description.trim(),
         dueDate: dueDate.trim(),
         priority,
-        completed: false,
-        createAt: new Date().toISOString(),
       };
 
-      const existingTasksJson = await AsyncStorage.getItem('tasks');
-      const existingTasks = existingTasksJson
-        ? JSON.parse(existingTasksJson)
-        : [];
-
-      const updatedTasks = [...existingTasks, newTask];
-
-      // updating async storage with new tasks
-      await AsyncStorage.setItem('tasks', JSON.stringify(updatedTasks));
-
-      Alert.alert('Success', 'Tasks added successfully', [
-        {text: 'OK', onPress: () => navigation.goBack()},
-      ]);
+      const result = await addTask(newTask);
+      if (result.success) {
+        Alert.alert('Success', 'Tasks added successfully', [
+          {text: 'OK', onPress: () => navigation.goBack()},
+        ]);
+      } else {
+        Alert.alert('Error', result.error);
+      }
     } catch (error) {
       Alert.alert('Error', 'Failed to save task');
       console.error(error);
@@ -120,7 +113,7 @@ const AddTaskScreen = ({navigation}: any) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={saveTask}>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSaveTask}>
           <Text style={styles.saveButtonText}>Save Task</Text>
         </TouchableOpacity>
       </ScrollView>

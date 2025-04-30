@@ -22,7 +22,27 @@ const useTaskStore = create((set, get) => ({
   },
 
   // Add a new task
-  addTask: () => null,
+  addTask: async task => {
+    set({isLoading: true, error: null});
+    try {
+      const newTask = {
+        ...task,
+        id: Date.now().toString(),
+        createAt: new Date().toISOString(),
+        completed: false,
+      };
+
+      const updatedTasks = [...get().tasks, newTask];
+      await AsyncStorage.setItem('tasks', JSON.stringify(updatedTasks));
+
+      set({tasks: updatedTasks, isLoading: false});
+      return {success: true};
+    } catch (error) {
+      console.error('Error adding task: ', error);
+      set({error: 'Failed to add task', isLoading: false});
+      return {success: false, error: 'Failed to add task'};
+    }
+  },
 
   // Update an existing task
   updateTask: () => null,
