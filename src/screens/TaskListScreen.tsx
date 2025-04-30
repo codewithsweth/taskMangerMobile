@@ -7,12 +7,12 @@ import {
   ListRenderItemInfo,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import React from 'react';
 import {useFocusEffect} from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useTaskStore from '../store/taskStore';
 
 interface TaskProps {
-  id: number;
+  id: string;
   title: string;
   description: string;
   completed: boolean;
@@ -20,59 +20,40 @@ interface TaskProps {
 }
 
 const TaskListScreen = ({navigation}: any) => {
-  const [tasks, setTasks] = useState<TaskProps[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const loadTasks = async () => {
-    try {
-      setLoading(true);
-      const storedTasks = await AsyncStorage.getItem('tasks');
-      if (storedTasks) {
-        setTasks(JSON.parse(storedTasks));
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to load tasks');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteTask = async (id: number) => {
-    try {
-      const newTasks = tasks.filter(task => task.id !== id);
-      setTasks(newTasks);
-      await AsyncStorage.setItem('tasks', JSON.stringify(newTasks));
-      Alert.alert('Success', 'Task deleted successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to delete task');
-    }
-  };
-
-  const confirmDelete = (id: number) => {
-    Alert.alert('Delete Task', 'Are you sure you want to delete this task?', [
-      {text: 'Cancel', style: 'cancel'},
-      {text: 'Delete', onPress: () => deleteTask(id), style: 'destructive'},
-    ]);
-  };
-
-  const toggleTaskCompletion = async (id: number) => {
-    try {
-      const updatedTasks = tasks.map(task =>
-        task.id === id ? {...task, completed: !task.completed} : task,
-      );
-      setTasks(updatedTasks);
-      await AsyncStorage.setItem('tasks', JSON.stringify(updatedTasks));
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update task.');
-    }
-  };
+  const {
+    tasks,
+    isLoading,
+    error,
+    fetchTasks,
+    toggleTaskCompletion,
+    deleteTask,
+  } = useTaskStore();
 
   useFocusEffect(
     React.useCallback(() => {
-      loadTasks();
-      return () => {};
-    }, []),
+      fetchTasks();
+      return () => [];
+    }, [fetchTasks]),
   );
+
+  const handleDeleteTask = async (id: string) => {
+    deleteTask(id);
+  };
+
+  const confirmDelete = (id: string) => {
+    Alert.alert('Delete Task', 'Are you sure you want to delete this task?', [
+      {text: 'Cancel', style: 'cancel'},
+      {
+        text: 'Delete',
+        onPress: () => handleDeleteTask(id),
+        style: 'destructive',
+      },
+    ]);
+  };
+
+  const handleToggleCompletion = (id: string) => {
+    toggleTaskCompletion(id);
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -96,7 +77,7 @@ const TaskListScreen = ({navigation}: any) => {
         onLongPress={() => confirmDelete(item.id)}>
         <TouchableOpacity
           style={[styles.checkbox, item.completed && styles.checkedBox]}
-          onPress={() => toggleTaskCompletion(item.id)}
+          onPress={() => handleToggleCompletion(item.id)}
         />
         <View style={styles.taskContent}>
           <Text
@@ -116,9 +97,21 @@ const TaskListScreen = ({navigation}: any) => {
       </TouchableOpacity>
     );
   };
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchTasks}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {loading ? (
+      {isLoading ? (
         <Text style={styles.LoadingText}>Loading tasks...</Text>
       ) : tasks.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -242,6 +235,28 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     height: '100%',
     borderRadius: 8,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#e74c3c',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#3498db',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 4,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
